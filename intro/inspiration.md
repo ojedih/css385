@@ -1,1 +1,0 @@
-I really enjoy playing tycoon games, in particular, Transport Fever 2 and Cities Skylines. The games always start with nothing and can build up to infinity. There is no right or wrong move, all that matters is whether your company or city runs efficiently and is able to grow. It's a good analogy to real life, in my opinion.
