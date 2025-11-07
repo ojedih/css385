@@ -9,6 +9,7 @@ using UnityEngine;
 
 public class PlayerRender : MonoBehaviour {
     public PlayerState state;
+    
     void Update() {
         transform.position = state.position;
         transform.right = state.aimDirection;

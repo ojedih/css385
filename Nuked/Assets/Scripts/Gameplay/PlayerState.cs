@@ -4,10 +4,11 @@ PlayerState.cs (Server + Client)
 Holds the truth: position, rotation, HP, etc.
 */
 
+using Mirror;
 using UnityEngine;
 
-public class PlayerState : MonoBehaviour {
-    public Vector2 position;
-    public Vector2 aimDirection;
-    public int health;
+public class PlayerState : NetworkBehaviour
+{
+    [SyncVar] public Vector2 position;
+    [SyncVar] public Vector2 aimDirection;
 }

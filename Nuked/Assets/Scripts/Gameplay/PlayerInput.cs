@@ -9,13 +9,16 @@ Sends commands.
 using UnityEngine;
 
 public class PlayerInput : MonoBehaviour {
-    public Vector2 MoveInput { get; private set; }
-    public Vector2 AimDirection { get; private set; }
-    public bool ShootPressed { get; private set; }
+    public Vector2 moveInput { get; private set; }
+    public Vector2 aimDirection { get; private set; }
+    public bool shootPressed { get; private set; }
 
     void Update() {
-        MoveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-        AimDirection = (Camera.main.ScreenToWorldPoint(Input.mousePosition) - transform.position).normalized;
-        ShootPressed = Input.GetMouseButton(0);
+        moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        aimDirection = (mousePos - transform.position).normalized;
+
+        shootPressed = Input.GetMouseButton(0);
     }
 }
