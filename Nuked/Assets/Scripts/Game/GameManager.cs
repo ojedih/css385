@@ -6,12 +6,8 @@ public class GameManager : NetworkBehaviour
 {
 
     [SyncVar] public float timeToDeath = 120f;
+    [SyncVar] public bool nukeDefused = false;
     public TMP_Text timerLabel;
-
-    void Start()
-    {
-        
-    }
 
     // Update is called once per frame
     void Update()
@@ -26,6 +22,4 @@ public class GameManager : NetworkBehaviour
         int minutes = Mathf.FloorToInt(timeToDeath / 60);
         timerLabel.text = $"{minutes:00}:{seconds:00}";
     }
-    
-    
 }

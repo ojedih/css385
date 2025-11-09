@@ -232,6 +232,10 @@ MonoBehaviour:
   syncInterval: 0
   team: 0
   healthText: {fileID: 0}
+  nuke: {fileID: 0}
+  defuseTime: 10
+  defuseDistance: 3
+  defuseSliderPrefab: {fileID: 6321652686246164297, guid: 82d5aca2d3e8761408d52702a6e2286f, type: 3}
 --- !u!114 &-8970642073816969472
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -277,6 +281,7 @@ MonoBehaviour:
   syncInterval: 0
   aimDirection: {x: 0, y: 0}
   hp: 100
+  defusing: 0
 --- !u!114 &-5459342504737883322
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -11,6 +11,7 @@ public class PlayerState : NetworkBehaviour
 {
     [SyncVar] public Vector2 aimDirection;
     [SyncVar] public int hp = 100;
+    [SyncVar] public bool defusing;
 
     
 }
