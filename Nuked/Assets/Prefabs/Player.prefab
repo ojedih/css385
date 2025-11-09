@@ -21,7 +21,6 @@ GameObject:
   - component: {fileID: -5459342504737883322}
   - component: {fileID: 3396789466753901295}
   - component: {fileID: -1774602536789464396}
-  - component: {fileID: -1494116434219459909}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -69,7 +68,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -210,7 +209,7 @@ MonoBehaviour:
   timelineOffset: 1
   showGizmos: 0
   showOverlay: 0
-  overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
+  overlayColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 0}
   onlySyncOnChangeCorrectionMultiplier: 2
   useFixedUpdate: 0
   rotationSensitivity: 0.01
@@ -232,6 +231,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0
   team: 0
+  healthText: {fileID: 0}
 --- !u!114 &-8970642073816969472
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -275,8 +275,8 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  position: {x: 0, y: 0}
   aimDirection: {x: 0, y: 0}
+  hp: 100
 --- !u!114 &-5459342504737883322
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -322,19 +322,3 @@ MonoBehaviour:
   bulletDistance: 20
   damage: 10
   tracerPrefab: {fileID: 8212439141427363456, guid: e046671682a8f4f1a83737a6afc36f2c, type: 3}
---- !u!114 &-1494116434219459909
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8795988915519403923}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 180c4cb334ff54f6d9952e82382a40a4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
-  hp: 100

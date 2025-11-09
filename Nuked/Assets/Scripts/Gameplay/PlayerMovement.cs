@@ -8,8 +8,14 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour {
     public float speed = 5f;
+    private Rigidbody2D rb;
 
-    public void Move(PlayerState state, Vector2 input) {
-        state.position += input.normalized * speed * Time.fixedDeltaTime;
+    void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+    }
+
+    public void Move(Vector2 input) {
+        rb.linearVelocity = input * speed;
     }
 }

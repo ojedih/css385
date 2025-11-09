@@ -30,15 +30,15 @@ public class PlayerGun : NetworkBehaviour
     [Command]
     void CmdShoot(Vector2 dir)
     {
-        // Server executes the shot
         RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, bulletDistance);
 
-        if (hit.collider)
+        if (hit.collider && hit.collider != GetComponent<Collider2D>())
         {
-            PlayerHealth hp = hit.collider.GetComponent<PlayerHealth>();
-            if (hp != null)
+            PlayerState target = hit.collider.GetComponent<PlayerState>();
+            if (target != null)
             {
-                hp.ApplyDamage(damage);
+                Debug.Log("Found target");
+                target.hp -= damage;
             }
         }
 

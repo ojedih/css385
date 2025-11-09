@@ -1,4 +1,5 @@
 using Mirror;
+using TMPro;
 using UnityEngine;
 
 public class PlayerNetwork : NetworkBehaviour
@@ -9,6 +10,7 @@ public class PlayerNetwork : NetworkBehaviour
     [SyncVar] public int team; // 0 = Team A, 1 = Team B
 
     Vector2 serverMoveInput;
+    public TMP_Text healthText;
 
     void Awake()
     {
@@ -21,12 +23,14 @@ public class PlayerNetwork : NetworkBehaviour
     {
         if (!isLocalPlayer) return;
         CmdSendInput(input.moveInput, input.aimDirection, input.shootPressed);
+        healthText.text = $"{state.hp}";
+
     }
 
     void FixedUpdate()
     {
-        if (isServer)
-        movement.Move(state, serverMoveInput);
+        if (!isServer) return;
+        movement.Move(serverMoveInput);
     }
 
     [Command]
@@ -52,5 +56,7 @@ public class PlayerNetwork : NetworkBehaviour
         base.OnStartLocalPlayer();
         CameraFollow cam = Camera.main.GetComponent<CameraFollow>();
         cam.SetTarget(transform);
+
+        healthText = GameObject.Find("Health").GetComponent<TMP_Text>();
     }
 }

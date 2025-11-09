@@ -9,6 +9,8 @@ using UnityEngine;
 
 public class PlayerState : NetworkBehaviour
 {
-    [SyncVar] public Vector2 position;
     [SyncVar] public Vector2 aimDirection;
+    [SyncVar] public int hp = 100;
+
+    
 }
