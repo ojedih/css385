@@ -8,6 +8,8 @@ public class PlayerNetwork : NetworkBehaviour
     PlayerMovement movement;
     [SyncVar] public int team; // 0 = Team A, 1 = Team B
 
+    Vector2 serverMoveInput;
+
     void Awake()
     {
         input = GetComponent<PlayerInput>();
@@ -17,21 +19,21 @@ public class PlayerNetwork : NetworkBehaviour
 
     void Update()
     {
-        if (isLocalPlayer)
-        {
-            // Local input controls only what we send to server
-            CmdSendInput(input.moveInput, input.aimDirection, input.shootPressed);
-        }
+        if (!isLocalPlayer) return;
+        CmdSendInput(input.moveInput, input.aimDirection, input.shootPressed);
+    }
+
+    void FixedUpdate()
+    {
+        if (isServer)
+        movement.Move(state, serverMoveInput);
     }
 
     [Command]
     void CmdSendInput(Vector2 move, Vector2 aim, bool shoot)
     {
-        // Server updates state
+        serverMoveInput = move.normalized;
         state.aimDirection = aim;
-        movement.Move(state, move);
-
-        // Shooting will happen here soon
     }
 
     public override void OnStartServer()
@@ -43,5 +45,12 @@ public class PlayerNetwork : NetworkBehaviour
 
         // First 3 players → team 0, next 3 → team 1
         team = (connectedPlayers <= 3) ? 0 : 1;
+    }
+
+    public override void OnStartLocalPlayer()
+    {
+        base.OnStartLocalPlayer();
+        CameraFollow cam = Camera.main.GetComponent<CameraFollow>();
+        cam.SetTarget(transform);
     }
 }

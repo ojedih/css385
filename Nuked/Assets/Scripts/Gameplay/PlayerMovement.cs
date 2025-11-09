@@ -10,6 +10,6 @@ public class PlayerMovement : MonoBehaviour {
     public float speed = 5f;
 
     public void Move(PlayerState state, Vector2 input) {
-        state.position += input.normalized * speed * Time.deltaTime;
+        state.position += input.normalized * speed * Time.fixedDeltaTime;
     }
 }
