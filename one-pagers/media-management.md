@@ -1,4 +1,5 @@
 # One Pager - Media Management
+by Alejandro Ojeda
 
 ### Common uses of media items:
 
