@@ -3,19 +3,15 @@ using Mirror;
 
 public class PlayerGun : NetworkBehaviour
 {
+    public GameObject tracerPrefab;
+    public AudioSource gunAudio;
+    public PlayerState state;
+
     public float fireRate = 0.15f;
-    public float bulletDistance = 20f;
+    public float bulletDistance = 100f;
     public int damage = 10;
     float lastFire;
-    public GameObject tracerPrefab;
-
-    PlayerState state;
-
-    void Awake()
-    {
-        state = GetComponent<PlayerState>();
-    }
-
+    
     void Update()
     {
         if (!isLocalPlayer) return;
@@ -23,6 +19,7 @@ public class PlayerGun : NetworkBehaviour
         if (Input.GetMouseButton(0) && Time.time > lastFire + fireRate)
         {
             lastFire = Time.time;
+            gunAudio.Play();
             CmdShoot(state.aimDirection);
         }
     }
@@ -30,7 +27,10 @@ public class PlayerGun : NetworkBehaviour
     [Command]
     void CmdShoot(Vector2 dir)
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, dir, bulletDistance);
+        Vector2 gunOffset = transform.right * 0.6f;
+        Vector2 shootOrigin = (Vector2)transform.position + gunOffset;
+        
+        RaycastHit2D hit = Physics2D.Raycast(shootOrigin, dir, bulletDistance);
 
         if (hit.collider && hit.collider != GetComponent<Collider2D>())
         {
@@ -42,16 +42,22 @@ public class PlayerGun : NetworkBehaviour
             }
         }
 
-        RpcShootEffect(transform.position, dir);
+        RpcShootEffect(shootOrigin, dir);
     }
 
     [ClientRpc]
-    void RpcShootEffect(Vector2 origin, Vector2 dir)
+    void RpcShootEffect(Vector2 origin, Vector2 direction)
     {
-        Vector2 end = origin + dir * bulletDistance;
+        direction = direction.normalized; // Ensure unit vector
+        Vector2 end = origin + direction * bulletDistance;
 
-        GameObject tracer = Instantiate(tracerPrefab);
-        tracer.GetComponent<BulletTracer>().Show(origin, end);
+        RaycastHit2D hit = Physics2D.Raycast(origin, direction, bulletDistance);
+
+        if(hit.collider)
+            end = hit.point; 
+
+        var t = Instantiate(tracerPrefab, origin, Quaternion.identity);
+        t.GetComponent<BulletTracer>().Show(origin, end);
     }
 }
 
