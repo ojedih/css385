@@ -8,16 +8,12 @@ public class PlayerNetwork : NetworkBehaviour
     PlayerInput input;
     PlayerState state;
     PlayerMovement movement;
+    Nuke nuke;
     
-    [SyncVar] public int team; // 0 = Team A, 1 = Team B
-
     Vector2 serverMoveInput;
-    public TMP_Text healthText;
+    [SyncVar] public int team; // 0 = Team Blue, 1 = Team Red
 
-    public GameObject nuke;
-    public float defuseTime = 10f;
-    public float defuseDistance = 3f;
-    [SyncVar] float defuseProgress = 0f;
+    TMP_Text healthText;
 
     public Slider defuseSliderPrefab;
     private Slider defuseSlider;
@@ -32,63 +28,42 @@ public class PlayerNetwork : NetworkBehaviour
     void Update()
     {
         if (!isLocalPlayer) return;
-        CmdSendInput(input.moveInput, input.aimDirection, input.shootPressed, input.defusePressed);
+        CmdSendInput();
         healthText.text = $"{state.hp}";
     }
 
     void FixedUpdate()
     {
         if (!isServer) return;
+        
         movement.Move(serverMoveInput);
+
+        if(state.defusing)
+            nuke.TryDefuse(this);
+        else
+            nuke.StopDefuse();
     }
 
     void LateUpdate()
     {
         if (!isLocalPlayer || defuseSlider == null) return;
-        defuseSlider.gameObject.SetActive(defuseProgress > 0);
-        defuseSlider.value = defuseProgress / defuseTime;
+        defuseSlider.gameObject.SetActive(nuke.defuseProgress > 0);
+        defuseSlider.value = nuke.defuseProgress / nuke.defuseTime;
     }
 
     [Command]
-    void CmdSendInput(Vector2 move, Vector2 aim, bool shoot, bool defusePressed)
+    void CmdSendInput()
     {
-        serverMoveInput = move.normalized;
-        state.aimDirection = aim;
-
-        float dist = Vector2.Distance(transform.position, nuke.transform.position);
-
-        if (dist < defuseDistance && defusePressed)
-        {
-            Debug.Log("Bomb defusing");
-            defuseProgress += Time.deltaTime;
-            if (defuseProgress >= defuseTime)
-            {
-                defuseProgress = defuseTime;
-                RpcBombDefused();
-            }
-        }
-        else
-        {
-            // stop or left radius -> reset
-            defuseProgress = 0f;
-        }
-
-    }
-
-    [ClientRpc]
-    void RpcBombDefused()
-    {
-        Debug.Log("Bomb Defused — Round Over");
-        
-        if (NetworkServer.active)
-            NetworkManager.singleton.StopServer();
+        serverMoveInput = input.moveInput.normalized;
+        state.aimDirection = input.aimDirection;
+        state.defusing = input.defusePressed;
     }
 
     public override void OnStartServer()
     {
         base.OnStartServer();
 
-        nuke = GameObject.FindWithTag("Bomb");
+        nuke = GameObject.FindWithTag("Nuke").GetComponent<Nuke>();
 
         // Count players already in the game
         int connectedPlayers = NetworkServer.connections.Count;
@@ -100,14 +75,11 @@ public class PlayerNetwork : NetworkBehaviour
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
-
-        nuke = GameObject.FindWithTag("Bomb");
         
         CameraFollow cam = Camera.main.GetComponent<CameraFollow>();
         cam.SetTarget(transform);
 
         healthText = GameObject.Find("Health").GetComponent<TMP_Text>();
-        nuke = GameObject.Find("Nuke");
         
         Canvas canvas = FindFirstObjectByType<Canvas>();
         defuseSlider = Instantiate(defuseSliderPrefab, canvas.transform);
