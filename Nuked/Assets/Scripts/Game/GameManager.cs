@@ -39,5 +39,12 @@ public class GameManager : NetworkBehaviour
     public override void OnStartServer()
     {
         nuke = GameObject.FindWithTag("Nuke").GetComponent<Nuke>();
+
+        foreach (var conn in NetworkServer.connections.Values)
+        {
+            var prefab = NetworkManager.singleton.playerPrefab;
+            GameObject player = Instantiate(prefab, new Vector3(0, 0, 0), Quaternion.identity);
+            NetworkServer.AddPlayerForConnection(conn, player);
+        }
     }
 }
