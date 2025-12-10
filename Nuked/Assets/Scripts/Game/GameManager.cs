@@ -8,8 +8,8 @@ using System.Collections;
 public class GameManager : NetworkBehaviour
 {
     [SyncVar] public float timeToDeath = 120f;
-    [SyncVar] public int blueTeamScore = 0;
-    [SyncVar] public int redTeamScore = 0;
+    [SyncVar(hook = nameof(OnBlueScoreChanged))] public int blueTeamScore = 0;
+    [SyncVar(hook = nameof(OnRedScoreChanged))] public int redTeamScore = 0;
 
     public TMP_Text timerLabel;
     public TMP_Text blueScoreText;
@@ -53,31 +53,34 @@ public class GameManager : NetworkBehaviour
         timerLabel.text = $"{minutes:00}:{seconds:00}";
     }
 
-    void UpdateScore(int team)
+    void OnBlueScoreChanged(int oldValue, int newValue)
     {
-        if(isServer)
-        {
-            if(team == 0)
-                blueTeamScore += 1;
-            else
-                redTeamScore += 1; 
-        }
+        blueScoreText.text = $"{newValue}";
+    }
 
-        blueScoreText.text = $"{blueTeamScore}";
-        redScoreText.text = $"{redTeamScore}";
+    void OnRedScoreChanged(int oldValue, int newValue)
+    {
+        redScoreText.text = $"{newValue}";
+    }
+
+    [Server]
+    public void AddScore(int team)
+    {
+        if (team == 0)
+            blueTeamScore += 1;
+        else
+            redTeamScore += 1;
     }
 
     [ClientRpc]
-    public void RpcNukeDefused(int team)
-    {
-        UpdateScore(team);
-        
+    public void RpcNukeDefused()
+    {   
         if(blueTeamScore == 5)
             TeamWin(0);
         else if(redTeamScore == 5)
             TeamWin(1);
-        
-        NextRound();
+        else
+            NextRound();
     }
 
     [ClientRpc]

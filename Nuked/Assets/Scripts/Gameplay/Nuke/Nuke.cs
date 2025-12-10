@@ -33,7 +33,8 @@ public class Nuke : NetworkBehaviour
             if (defuseProgress >= defuseTime)
             {
                 defuseProgress = defuseTime;
-                gameManager.RpcNukeDefused(player.team);
+                gameManager.AddScore(player.team);
+                gameManager.RpcNukeDefused();
                 ResetDefuse();
             }
         }
