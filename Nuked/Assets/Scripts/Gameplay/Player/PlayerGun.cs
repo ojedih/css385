@@ -36,7 +36,7 @@ public class PlayerGun : NetworkBehaviour
         {
             PlayerState target = hit.collider.GetComponent<PlayerState>();
             if (target != null)
-                target.hp -= damage;
+                target.TakeDamage(damage);
         }
 
         RpcShootEffect(shootOrigin, dir);

@@ -12,6 +12,7 @@ public class PlayerNetwork : NetworkBehaviour
     
     Vector2 serverMoveInput;
     [SyncVar] public int team; // 0 = Team Blue, 1 = Team Red
+    [SyncVar] public bool isDead = false;
 
     TMP_Text healthText;
 
@@ -23,8 +24,6 @@ public class PlayerNetwork : NetworkBehaviour
         input = GetComponent<PlayerInput>();
         state = GetComponent<PlayerState>();
         movement = GetComponent<PlayerMovement>();
-
-        //nuke = Nuke.Instance;
     }
 
     void Update()
@@ -73,10 +72,7 @@ public class PlayerNetwork : NetworkBehaviour
         // First 3 players → team 0, next 3 → team 1
         team = (connectedPlayers <= 3) ? 0 : 1;
 
-        if(team == 0)
-            transform.position = new Vector2(0f, -7.8f);
-        else
-            transform.position = new Vector2(0f, 29.5f);
+        RoundReset();
     }
 
     public override void OnStartLocalPlayer()
@@ -92,5 +88,44 @@ public class PlayerNetwork : NetworkBehaviour
         
         Canvas canvas = FindFirstObjectByType<Canvas>();
         defuseSlider = Instantiate(defuseSliderPrefab, canvas.transform);
+    }
+
+    [ClientRpc]
+    private void RpcSetVisible(bool visible)
+    {
+        // Only one SpriteRenderer – super clean
+        GetComponent<SpriteRenderer>().enabled = visible;
+        
+        // Optional: also disable collider so dead body can't block
+        var col = GetComponent<Collider2D>();
+        if (col) col.enabled = visible;
+    }
+
+    [Server]
+    public void RoundReset()
+    {
+        if(team == 0)
+            transform.position = new Vector2(0f, -7.8f);
+        else
+            transform.position = new Vector2(0f, 29.5f);
+
+        state.ResetHealth();
+        RpcSetVisible(true);
+        isDead = false;
+        GetComponent<PlayerMovement>().enabled = true;
+        GetComponent<PlayerInput>().enabled = true;
+    }
+
+    [Server]
+    public void Die()
+    {
+        if (isDead) return;
+
+        isDead = true;
+
+        GetComponent<PlayerMovement>().enabled = false;
+        GetComponent<PlayerInput>().enabled = false;
+
+        RpcSetVisible(false);
     }
 }
