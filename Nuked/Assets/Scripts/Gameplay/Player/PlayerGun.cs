@@ -36,10 +36,7 @@ public class PlayerGun : NetworkBehaviour
         {
             PlayerState target = hit.collider.GetComponent<PlayerState>();
             if (target != null)
-            {
-                Debug.Log("Found target");
                 target.hp -= damage;
-            }
         }
 
         RpcShootEffect(shootOrigin, dir);

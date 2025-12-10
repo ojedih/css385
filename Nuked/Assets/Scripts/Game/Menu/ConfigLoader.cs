@@ -7,11 +7,14 @@ using System.IO;
 public class GameConfig {
     public int volume;
     public string nametag;
+
+    public string hostip;
 }
 
 public class ConfigLoader : MonoBehaviour {
     [SerializeField] private Scrollbar volumeScrollbar;
     [SerializeField] private TMP_InputField nameTagInputField; 
+    [SerializeField] private TMP_InputField hostIP; 
     
     private GameConfig config;
     private string configPath;
@@ -44,7 +47,7 @@ public class ConfigLoader : MonoBehaviour {
         TextAsset defaultJson = Resources.Load<TextAsset>("config");
         if (defaultJson == null) {
             Debug.LogError("Default config.json not found in Resources!");
-            config = new GameConfig { volume = 100, nametag = "Player1" };
+            config = new GameConfig { volume = 100, nametag = "Player1", hostip = "localhost" };
         } else {
             config = JsonUtility.FromJson<GameConfig>(defaultJson.text);
         }

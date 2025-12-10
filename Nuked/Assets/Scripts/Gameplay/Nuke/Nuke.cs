@@ -1,69 +1,60 @@
 using Mirror;
 using UnityEngine;
-using UnityEngine.Video;
-using System.Collections;
 
 public class Nuke : NetworkBehaviour
 {
-
-    [SyncVar] public bool nukeDefused = false;
     [SyncVar] public float defuseProgress = 0f;
-    
+    [SyncVar] public bool isBeingDefused = false;
+
     public float defuseTime = 10f;
     public float defuseDistance = 3f;
 
-    public VideoPlayer videoPlayer;
+    public GameManager gameManager;
 
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
+    private NetworkIdentity currentDefuser = null;
 
     public void TryDefuse(PlayerNetwork player)
     {
-        float playerDist = Vector2.Distance(player.transform.position, transform.position);
+        if (isBeingDefused && currentDefuser != player.netIdentity)
+            return; // Someone else is already defusing
 
-        if (playerDist < defuseDistance)
+        float dist = Vector3.Distance(player.transform.position, transform.position);
+        if (dist < defuseDistance)
         {
-            Debug.Log("Bomb defusing");
-            defuseProgress += Time.deltaTime;
+            if (!isBeingDefused)
+            {
+                isBeingDefused = true;
+                currentDefuser = player.netIdentity;
+            }
+
+            defuseProgress += Time.unscaledDeltaTime;
+            Debug.Log($"Defusing... {defuseProgress:F1}/{defuseTime}");
+
             if (defuseProgress >= defuseTime)
             {
                 defuseProgress = defuseTime;
-                RpcNukeDefused();
+                gameManager.RpcNukeDefused(player.team);
+                ResetDefuse();
             }
         }
         else
         {
-            // stop or left radius -> reset
-            defuseProgress = 0f;
+            StopDefuse(player);
         }
     }
 
-    public void StopDefuse()
+    public void StopDefuse(PlayerNetwork player = null)
+    {
+        if (player == null || currentDefuser == player.netIdentity)
+        {
+            ResetDefuse();
+        }
+    }
+
+    private void ResetDefuse()
     {
         defuseProgress = 0f;
-    }
-
-    [ClientRpc]
-    void RpcNukeDefused()
-    {
-        Debug.Log("Nuke Defused — Round Over");
-    }
-
-    [ClientRpc]
-    public void RpcDetonateNuke()
-    {
-        Debug.Log("Nuke Detonated — Round Over");
-        videoPlayer.isLooping = false;
-        videoPlayer.Play();
-        StartCoroutine(WaitForVideoEnd());
-    }
-
-    IEnumerator WaitForVideoEnd()
-    {
-        yield return new WaitUntil(() => videoPlayer.frame >= (long)videoPlayer.frameCount - 1);
-        if (isServer) NetworkManager.singleton.StopServer(); // or StopServer()
+        isBeingDefused = false;
+        currentDefuser = null;
     }
 }
