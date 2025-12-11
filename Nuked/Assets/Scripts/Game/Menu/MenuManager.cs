@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 using Mirror;
 
 public class MenuManager : MonoBehaviour
@@ -6,11 +7,23 @@ public class MenuManager : MonoBehaviour
     [Header("Menu Panels")]
     public GameObject mainMenuPanel;
     public GameObject settingsPanel;
+    public TMP_InputField ipInput;
 
     void Start()
     {
         // Ensure the main menu is visible at startup
         ShowMainMenu();
+    }
+
+    public void HostGame()
+    {
+        NetworkManager.singleton.StartHost();
+    }
+
+    public void JoinGame()
+    {
+        NetworkManager.singleton.networkAddress = ipInput.text;
+        NetworkManager.singleton.StartClient();
     }
 
     public void ShowMainMenu()

@@ -9,13 +9,9 @@ public class LobbyManager : NetworkBehaviour
     public GameObject playerListEntryPrefab;
     public Button startGameButton;
 
-    void Start()
-    {
-        RefreshPlayerList();
-    }
-
     void Update()
     {
+        RefreshPlayerList();
         // Host only gets Start button
         if (startGameButton != null)
             startGameButton.gameObject.SetActive(NetworkServer.active);
@@ -37,10 +33,14 @@ public class LobbyManager : NetworkBehaviour
     }
 
     public void StartMatch()
-    {
-        if (!NetworkServer.active) return; // Only host can start
+    {        
+        if (!NetworkServer.active) return;
 
-        Debug.Log("Starting match...");
+        // Clear old dummy players so AddPlayer works correctly
+        foreach (var conn in NetworkServer.connections.Values)
+            if (conn.identity != null)
+                NetworkServer.DestroyPlayerForConnection(conn);
+
         NetworkManager.singleton.ServerChangeScene("Game");
     }
 }

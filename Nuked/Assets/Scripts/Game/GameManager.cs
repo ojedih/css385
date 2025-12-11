@@ -1,16 +1,33 @@
 using Mirror;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Video;
+using System.Collections;
+
 
 public class GameManager : NetworkBehaviour
 {
     [SyncVar] public float timeToDeath = 120f;
-    public TMP_Text timerLabel;
-    public AudioSource tension_buildup;
+    [SyncVar(hook = nameof(OnBlueScoreChanged))] public int blueTeamScore = 0;
+    [SyncVar(hook = nameof(OnRedScoreChanged))] public int redTeamScore = 0;
 
-    Nuke nuke;
+    public TMP_Text timerLabel;
+    public TMP_Text blueScoreText;
+    public TMP_Text redScoreText;
+    public AudioSource tension_buildup;
+    public VideoPlayer videoPlayer;
+    public GameObject blueWinScreen;
+    public GameObject redWinScreen;
+    public GameObject gamePanel;
 
     // Update is called once per frame
+    
+    void Start()
+    {
+        blueWinScreen.SetActive(false);
+        redWinScreen.SetActive(false);
+    }
+    
     void Update()
     {
         if (isServer)
@@ -19,7 +36,7 @@ public class GameManager : NetworkBehaviour
             if (timeToDeath < 0)
             {
                 timeToDeath = 0;
-                nuke.RpcDetonateNuke();
+                RpcDetonateNuke();
             }
 
             if (timeToDeath < 60f && !tension_buildup.isPlaying)
@@ -36,8 +53,91 @@ public class GameManager : NetworkBehaviour
         timerLabel.text = $"{minutes:00}:{seconds:00}";
     }
 
-    public override void OnStartServer()
+    void OnBlueScoreChanged(int oldValue, int newValue)
     {
-        nuke = GameObject.FindWithTag("Nuke").GetComponent<Nuke>();
+        blueScoreText.text = $"{newValue}";
+    }
+
+    void OnRedScoreChanged(int oldValue, int newValue)
+    {
+        redScoreText.text = $"{newValue}";
+    }
+
+    [Server]
+    public void AddScore(int team)
+    {
+        if (team == 0)
+            blueTeamScore += 1;
+        else
+            redTeamScore += 1;
+    }
+
+    [ClientRpc]
+    public void RpcNukeDefused()
+    {   
+        if(blueTeamScore == 5)
+            TeamWin(0);
+        else if(redTeamScore == 5)
+            TeamWin(1);
+        else
+            NextRound();
+    }
+
+    [ClientRpc]
+    public void RpcDetonateNuke()
+    {
+        Debug.Log("Nuke Detonated — Round Over");
+        videoPlayer.isLooping = false;
+        videoPlayer.Play();
+        StartCoroutine(WaitForVideoEnd());
+    }
+
+    [ClientRpc]
+    public void TeamWin(int team)
+    {
+        gamePanel.SetActive(false);
+
+        if(team == 0)
+            blueWinScreen.SetActive(true);
+        else
+            redWinScreen.SetActive(true);
+
+        ScheduleServerShutdown(10f);
+    }
+
+    [Server]
+    public void NextRound()
+    {
+        timeToDeath = 120f;
+        tension_buildup.Stop();
+
+        foreach (var conn in NetworkServer.connections.Values)
+        {
+            if (conn.identity == null) continue;
+            var player = conn.identity.GetComponent<PlayerNetwork>();
+            if (player != null)
+                player.RoundReset();
+        }
+    }
+
+    [Server]
+    public void ScheduleServerShutdown(float delay = 10f)
+    {
+        StartCoroutine(ShutdownAfterDelay(delay));
+    }
+
+    private IEnumerator ShutdownAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);   // waits 10 seconds (real time)
+
+        // Stop everything properly
+        if (NetworkServer.active)
+            NetworkManager.singleton.StopServer();   // stops server + host
+    }
+
+    IEnumerator WaitForVideoEnd()
+    {
+        yield return new WaitUntil(() => videoPlayer.frame >= (long)videoPlayer.frameCount - 1);
+        if (isServer) NetworkManager.singleton.StopServer();
     }
 }

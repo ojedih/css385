@@ -12,6 +12,7 @@ public class PlayerNetwork : NetworkBehaviour
     
     Vector2 serverMoveInput;
     [SyncVar] public int team; // 0 = Team Blue, 1 = Team Red
+    [SyncVar] public bool isDead = false;
 
     TMP_Text healthText;
 
@@ -28,7 +29,7 @@ public class PlayerNetwork : NetworkBehaviour
     void Update()
     {
         if (!isLocalPlayer) return;
-        CmdSendInput();
+        CmdSendInput(input.moveInput.normalized, input.aimDirection, input.defusePressed);
         healthText.text = $"{state.hp}";
     }
 
@@ -41,7 +42,7 @@ public class PlayerNetwork : NetworkBehaviour
         if(state.defusing)
             nuke.TryDefuse(this);
         else
-            nuke.StopDefuse();
+            nuke.StopDefuse(this);
     }
 
     void LateUpdate()
@@ -52,24 +53,26 @@ public class PlayerNetwork : NetworkBehaviour
     }
 
     [Command]
-    void CmdSendInput()
+    void CmdSendInput(Vector2 move, Vector2 aimDir, bool defusing)
     {
-        serverMoveInput = input.moveInput.normalized;
-        state.aimDirection = input.aimDirection;
-        state.defusing = input.defusePressed;
+        serverMoveInput = move;
+        state.aimDirection = aimDir;
+        state.defusing = defusing;
     }
 
     public override void OnStartServer()
     {
         base.OnStartServer();
 
-        nuke = GameObject.FindWithTag("Nuke").GetComponent<Nuke>();
+        nuke = GameObject.Find("Nuke").GetComponent<Nuke>();
 
         // Count players already in the game
         int connectedPlayers = NetworkServer.connections.Count;
 
         // First 3 players → team 0, next 3 → team 1
         team = (connectedPlayers <= 3) ? 0 : 1;
+
+        RoundReset();
     }
 
     public override void OnStartLocalPlayer()
@@ -80,8 +83,49 @@ public class PlayerNetwork : NetworkBehaviour
         cam.SetTarget(transform);
 
         healthText = GameObject.Find("Health").GetComponent<TMP_Text>();
+
+        nuke = GameObject.Find("Nuke").GetComponent<Nuke>();
         
         Canvas canvas = FindFirstObjectByType<Canvas>();
         defuseSlider = Instantiate(defuseSliderPrefab, canvas.transform);
+    }
+
+    [ClientRpc]
+    private void RpcSetVisible(bool visible)
+    {
+        // Only one SpriteRenderer – super clean
+        GetComponent<SpriteRenderer>().enabled = visible;
+        
+        // Optional: also disable collider so dead body can't block
+        var col = GetComponent<Collider2D>();
+        if (col) col.enabled = visible;
+    }
+
+    [Server]
+    public void RoundReset()
+    {
+        if(team == 0)
+            transform.position = new Vector2(0f, -7.8f);
+        else
+            transform.position = new Vector2(0f, 29.5f);
+
+        state.ResetHealth();
+        RpcSetVisible(true);
+        isDead = false;
+        GetComponent<PlayerMovement>().enabled = true;
+        GetComponent<PlayerInput>().enabled = true;
+    }
+
+    [Server]
+    public void Die()
+    {
+        if (isDead) return;
+
+        isDead = true;
+
+        GetComponent<PlayerMovement>().enabled = false;
+        GetComponent<PlayerInput>().enabled = false;
+
+        RpcSetVisible(false);
     }
 }
